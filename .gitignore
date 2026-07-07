@@ -1,0 +1,25 @@
+### Python ###
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+### Проект: данные и выходные файлы парсера ###
+excel/
+*_auto.xlsx
+*_auto_report.csv
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### VS Code ###
+.vscode/
