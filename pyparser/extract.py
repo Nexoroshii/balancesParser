@@ -346,6 +346,73 @@ def detect_date(doc: Doc) -> Optional[DateHit]:
     return None
 
 
+# -------------------- сверка дат по всей поставке --------------------------
+# В одной поставке даты кучкуются в несколько дней. Числовая дата, где одно
+# число > 12, ориентируется ОДНОЗНАЧНО (напр. «07/13» = 13 июля при любом
+# соглашении) — это «якорь». Разные поставщики в одной поставке пишут по-разному
+# (06/07 = dd/mm = 6 июля, а 07/06 = mm/dd = тоже 6 июля), поэтому фиксированное
+# правило dd/mm ошибается на половине. Решение: для каждой неоднозначной даты
+# (оба числа ≤ 12) берём ту из двух трактовок, что ближе к окну якорей.
+
+_AMBIG_NOTE = "дата неоднозначна dd/mm vs mm/dd"
+
+
+def _swap_dm(d: dt.date) -> Optional[dt.date]:
+    """Меняет местами день и месяц (обе трактовки dd/mm ↔ mm/dd)."""
+    if d.day <= 12 and d.month <= 12:
+        try:
+            return dt.date(d.year, d.day, d.month)
+        except ValueError:
+            return None
+    return None
+
+
+def reconcile_dates(extractions, extra_anchors=None) -> int:
+    """Разворачивает неоднозначные даты (dd/mm vs mm/dd) по всей поставке.
+
+    Якоря — все однозначные даты партии (+ extra_anchors, напр. дата из имени
+    папки). Для каждой неоднозначной даты выбираем трактовку, ближайшую к окну
+    якорей [min..max]; при равенстве — ближе к медиане. Возвращает число
+    фактически изменённых дат. Мутирует DateHit на месте.
+    """
+    exs = [e for e in extractions if e is not None]
+    anchors = [a for a in (extra_anchors or []) if a]
+    for e in exs:
+        d = e.date
+        if d and d.value and not d.ambiguous:
+            anchors.append(d.value)
+    if not anchors:
+        return 0                     # не на что опереться — оставляем как есть
+    anchors.sort()
+    lo, hi, med = anchors[0], anchors[-1], anchors[len(anchors) // 2]
+
+    def dist(x: dt.date) -> int:
+        if x < lo:
+            return (lo - x).days
+        if x > hi:
+            return (x - hi).days
+        return 0
+
+    fixed = 0
+    for e in exs:
+        d = e.date
+        if not (d and d.value and d.ambiguous):
+            continue
+        cur = d.value
+        alt = _swap_dm(cur)
+        cands = [cur] if (alt is None or alt == cur) else [cur, alt]
+        best = min(cands, key=lambda x: (dist(x), abs((x - med).days)))
+        if best != cur:
+            d.value = best
+            d.source = (d.source + "+reconciled").strip("+")
+            e.notes.append("дата развёрнута по поставке → " + best.isoformat())
+            fixed += 1
+        d.ambiguous = False          # трактовка выбрана по контексту поставки
+        if _AMBIG_NOTE in e.notes:
+            e.notes.remove(_AMBIG_NOTE)
+    return fixed
+
+
 # ------------------------------ валюта -------------------------------------
 
 def detect_currency(doc: Doc, amount_label: str = "") -> str:
@@ -410,7 +477,10 @@ def extract(doc: Doc, is_freight: bool = False) -> Extraction:
             ds = re.findall(r"\d{1,2}[-/]\d{1,2}[-/]\d{4}", up)
             if ds:
                 freight_date = _to_date(ds[-1])
-        if freight_total is not None:
+        # если метки не было (фолбэк «макс. USD») и обычный детектор уже нашёл
+        # надёжную сумму по явной метке (TOTAL EUR/USD, INVOICE TOTAL...) —
+        # не затираем её угадайкой: фолбэк нужен только когда сказать нечего.
+        if freight_total is not None and (freight_by_label or amt is None):
             lbl = "Total Prepaid (фрахт)" if freight_by_label else "фрахт USD (макс.)"
             amt = AmountHit(lbl, "", freight_total)
 

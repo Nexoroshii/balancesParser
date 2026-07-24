@@ -19,7 +19,7 @@ import datetime as dt
 from collections import defaultdict
 
 from .readers import read_any
-from .extract import extract
+from .extract import extract, reconcile_dates
 from .aliases import NEW_COLUMNS
 from .balance import BalanceWriter
 from .phase1 import find_files, is_freight_path, rel
@@ -71,16 +71,31 @@ def aggregate(folder):
     files = list(find_files(folder))
     total = len(files)
     _log("Найдено файлов инвойсов: %d. Читаю..." % total)
+
+    # 1) читаем и извлекаем всё (даты сверяем по всей поставке до агрегации)
+    parsed = []                 # (p, ex|None, err|None)
     for i, p in enumerate(files, 1):
         _log("  [%d/%d] %s" % (i, total, rel(p, folder)))
-        stem = os.path.splitext(os.path.basename(p))[0].strip().lower()
-        if stem in seen_stems:
-            continue
         try:
             doc = read_any(p)
             ex = extract(doc, is_freight=is_freight_path(p))
         except Exception as e:
-            manual.append(_manual_item(folder, p, None, "ошибка чтения: " + repr(e)))
+            parsed.append((p, None, e))
+            continue
+        parsed.append((p, ex, None))
+
+    # 2) сверка дат dd/mm vs mm/dd по окну однозначных дат поставки
+    n_fixed = reconcile_dates([ex for _, ex, err in parsed if ex])
+    if n_fixed:
+        _log("Развёрнуто неоднозначных дат по поставке: %d" % n_fixed)
+
+    # 3) агрегация (дедуп одного инвойса в двух форматах — по имени файла)
+    for p, ex, err in parsed:
+        stem = os.path.splitext(os.path.basename(p))[0].strip().lower()
+        if stem in seen_stems:
+            continue
+        if err is not None:
+            manual.append(_manual_item(folder, p, None, "ошибка чтения: " + repr(err)))
             continue
         if ex.status != "ok" or not ex.supplier:
             manual.append(_manual_item(folder, p, ex, "; ".join(ex.notes) or ex.status))

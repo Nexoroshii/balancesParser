@@ -31,6 +31,9 @@ FARM_ALIASES = {
     "WARIDI": "WARIDI(euro)",
     "FLORES MENDEZ": "FLORES  MENDEZ",
     "FLORES-MENDEZ": "FLORES  MENDEZ",
+    # гровер SJ FLOWERS SAS; в имени файла стоит покупатель (GLOBAL GREENDECO LTD),
+    # поэтому распознаём по GROWER NAME в тексте
+    "SJ FLOWERS": "SJ FLOWERS",
     # добавлено по итогам Фазы 1:
     "BELLARO": "Bellaro S.A.",
     "BELLAROSA": "Bellaro S.A.",
@@ -73,6 +76,9 @@ FARM_ALIASES = {
     "BUDS&BLOOM": "BUDS BLOOMS",
     "BUDS BLOOM": "BUDS BLOOMS",
     "NL813909867B01": "AIRFLO",         # NL-форвардер (INVOICE 536647 и др.) — по VAT, в колонку AIRFLO
+    # новые фермы (07.20/07.21), колонки уже добавлены юзером в баланс 2507
+    "SAN JORGE": "SAN JORGE ROSES",     # SAN JORGE ROSES AND FEELINGS SCC
+    "FLORISSIMA": "FLORISSIMA",         # FLORISSIMA AND FRUIT EXPORT SA - ECUADOR
 }
 
 # Поставщики, которых ещё нет в балансе — их блок создаётся в конце Лист1.
