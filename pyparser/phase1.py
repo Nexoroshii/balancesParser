@@ -16,7 +16,7 @@ import io
 import csv
 
 from .readers import read_any
-from .extract import extract
+from .extract import extract, reconcile_dates
 from .aliases import SKIP_FILE_PATTERNS
 import re
 
@@ -70,6 +70,9 @@ def run(folder: str, out_csv: str):
             results.append((p, None, "ERROR: " + repr(e)))
             continue
         results.append((p, ex, None))
+
+    # сверка дат dd/mm vs mm/dd по всей поставке (см. reconcile_dates)
+    reconcile_dates([ex for _, ex, err in results if ex])
 
     # --- отчёт csv ---
     with io.open(out_csv, "w", encoding="utf-8-sig", newline="") as f:
