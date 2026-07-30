@@ -63,9 +63,9 @@ FARM_ALIASES = {
     "FAUSTO BAYARDO VALENCIA": "DOMENICA FLOWERS",
     "DOMENICA FLOWERS": "DOMENICA FLOWERS",
     "DOMENICAFLOWERS": "DOMENICA FLOWERS",
-    "1792059232001": "NOVELFARM (FLORSANI S.A., )",   # NOVELFARM, ключ по RUC (имени в тексте нет)
-    "NOVELFARM": "NOVELFARM (FLORSANI S.A., )",
-    "FLORSANI": "NOVELFARM (FLORSANI S.A., )",
+    "1792059232001": "NOVELFARM (FLORSANI S.A., ) Pyganflor",   # NOVELFARM, ключ по RUC (имени в тексте нет)
+    "NOVELFARM": "NOVELFARM (FLORSANI S.A., ) Pyganflor",
+    "FLORSANI": "NOVELFARM (FLORSANI S.A., ) Pyganflor",
     # BLESS FLOWER — колонки в балансе ещё нет, создаётся в конце (см. NEW_COLUMNS)
     "BLESS FLOWER": "BLESS FLOWER",
     "BESSFLOWER": "BLESS FLOWER",
@@ -79,10 +79,17 @@ FARM_ALIASES = {
     # новые фермы (07.20/07.21), колонки уже добавлены юзером в баланс 2507
     "SAN JORGE": "SAN JORGE ROSES",     # SAN JORGE ROSES AND FEELINGS SCC
     "FLORISSIMA": "FLORISSIMA",         # FLORISSIMA AND FRUIT EXPORT SA - ECUADOR
+    # колонки уже есть в балансе 2507, алиасов не хватало (07.28-07.29)
+    "LIFEFLOWERS": "LIFE Flowers(LIFEFLOWERS CIA. LTDA)",
+    "LIFE FLOWERS": "LIFE Flowers(LIFEFLOWERS CIA. LTDA)",
+    "RUMI FLOWERS": "RUMI FLOWERS",
+    # новые фермы (07.28), колонок в балансе ещё нет — создаются в конце (см. NEW_COLUMNS)
+    "PINANGO CUASCOTA": "PINANGO CUASCOTA ALEXANDRA PATRICIA",
+    "BOSQUEFLOWERS": "BOSQUEFLOWERS SA",
 }
 
 # Поставщики, которых ещё нет в балансе — их блок создаётся в конце Лист1.
-NEW_COLUMNS = {"BLESS FLOWER"}
+NEW_COLUMNS = {"BLESS FLOWER", "PINANGO CUASCOTA ALEXANDRA PATRICIA", "BOSQUEFLOWERS SA"}
 
 FREIGHT_ALIASES = {
     "INTERNATIONAL FLOWER CARGO": "IFC(разбивка колумбия)",
@@ -109,4 +116,6 @@ SKIP_FILE_PATTERNS = [
     r"^KE\d+\.XLSX$",       # KE0702.xlsx — сводный рабочий файл
     r"GRD-GGD.*\.XLSX$",    # манифест боксов AIRFLO (.xlsx, без сумм)
     r"^GLOBAL-FFG,",        # сводник-манифест «GLOBAL-FFG, GLOBAL-IA <дата>.xlsx»
+    r"^CARGOWISE EXPORT",   # манифест веса CargoWise (Shipper/Consignee/Weight, без сумм)
+    r"^INSTRUCTIONS",       # манифест боксов по AWB («INSTRUCTIONS ... GGD ... BOXES on AWB ...»)
 ]
