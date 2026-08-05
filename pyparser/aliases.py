@@ -36,14 +36,14 @@ FARM_ALIASES = {
     "SJ FLOWERS": "SJ FLOWERS",
     # добавлено по итогам Фазы 1:
     "BELLARO": "Bellaro S.A.",
-    "BELLAROSA": "Bellaro S.A.",
+    "BELLAROSA": "Bellaro S.A.",   # юзер подтвердил 2026-08-05: одна ферма, не отдельный поставщик
     "BELEN'S COMPANY": "Belen's Company",
     "BELENCOMPANIAROSES": "Belen's Company",
     "CAIZALUISA": "CAIZALUISA (ANTHONELA FARMS)",
     "ANTHONELA FARMS": "CAIZALUISA (ANTHONELA FARMS)",
     "LUCY ROSES": "Lucy Roses Cia. Ltda.",
     "ROSAL S FLOWERS": "ROSAL S FLOWERS",
-    "ROSALES GAONA": "ROSAL S FLOWERS",
+    "ROSALES GAONA": "ROSAL S FLOWERS",   # юзер подтвердил 2026-08-05: Gaona = владелец/производитель Rosal S Flowers, одна ферма
     "MERAKI": "MERAKI   (EMERSON Michael Arequipa)",
     "AREQUIPA AIMACANA EMERSON": "MERAKI   (EMERSON Michael Arequipa)",
     "MERAKIFARMS": "MERAKI   (EMERSON Michael Arequipa)",
@@ -51,7 +51,7 @@ FARM_ALIASES = {
     "BLISS FLORA": "BLISS FLORA",
     "YARINA": "YARINA  FLOWERS ",
     "INFOYARINA": "YARINA  FLOWERS ",
-    "POZO DIAZ RICHART": "YARINA  FLOWERS ",
+    "POZO DIAZ RICHART": "YARINA  FLOWERS ",   # юзер подтвердил 2026-08-05: владелец/производитель Yarina Flowers, одна ферма
     "P.J. DAVE FLORA": "PJ DAVE FLORA(euro)",
     "PJ DAVE FLORA": "PJ DAVE FLORA(euro)",
     "PJDAVEFLORA": "PJ DAVE FLORA(euro)",
@@ -69,7 +69,10 @@ FARM_ALIASES = {
     # BLESS FLOWER — колонки в балансе ещё нет, создаётся в конце (см. NEW_COLUMNS)
     "BLESS FLOWER": "BLESS FLOWER",
     "BESSFLOWER": "BLESS FLOWER",
-    "LANCHIMBA TUTILLO": "BLESS FLOWER",
+    # LANCHIMBA TUTILLO — отдельная ферма (НЕ BLESS FLOWER, юзер подтвердил разделение
+    # 2026-08-05); ранее ошибочно объединены, т.к. попали в один манual-batch с похожим
+    # форматом инвойса. Колонки в балансе ещё нет — создаётся в конце (см. NEW_COLUMNS).
+    "LANCHIMBA TUTILLO": "LANCHIMBA TUTILLO",
     "FLORALCHAIN": "GREENDEAL",   # инвойсы Floralchain («Реализация товаров и услуг») пишем в колонку GREENDEAL
     "BUDS AND BLOOMS": "BUDS BLOOMS",
     "BUDSANDBLOOMS": "BUDS BLOOMS",     # из email/сайта, устойчиво к OCR-склейке
@@ -89,7 +92,7 @@ FARM_ALIASES = {
 }
 
 # Поставщики, которых ещё нет в балансе — их блок создаётся в конце Лист1.
-NEW_COLUMNS = {"BLESS FLOWER", "PINANGO CUASCOTA ALEXANDRA PATRICIA", "BOSQUEFLOWERS SA"}
+NEW_COLUMNS = {"BLESS FLOWER", "LANCHIMBA TUTILLO", "PINANGO CUASCOTA ALEXANDRA PATRICIA", "BOSQUEFLOWERS SA"}
 
 FREIGHT_ALIASES = {
     "INTERNATIONAL FLOWER CARGO": "IFC(разбивка колумбия)",
