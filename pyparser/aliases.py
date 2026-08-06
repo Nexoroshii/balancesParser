@@ -89,6 +89,8 @@ FARM_ALIASES = {
     # новые фермы (07.28), колонок в балансе ещё нет — создаются в конце (см. NEW_COLUMNS)
     "PINANGO CUASCOTA": "PINANGO CUASCOTA ALEXANDRA PATRICIA",
     "BOSQUEFLOWERS": "BOSQUEFLOWERS SA",
+    # новая ферма, колонка уже создана юзером в балансе (08.06)
+    "NIVALIA FLOWERS": "NIVALIA FLOWERS",
 }
 
 # Поставщики, которых ещё нет в балансе — их блок создаётся в конце Лист1.
