@@ -250,13 +250,13 @@ _MONTHS = {
     "JAN": 1, "FEB": 2, "MAR": 3, "APR": 4, "MAY": 5, "JUN": 6,
     "JUL": 7, "AUG": 8, "SEP": 9, "OCT": 10, "NOV": 11, "DEC": 12,
 }
-_DATE_ALPHA = r"(\d{1,2}[/\-.\s]*(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*[/\-.\s]*\d{2,4})"
+_DATE_ALPHA = r"(\d{1,2}(?:ST|ND|RD|TH)?[/\-.\s]*(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*[/\-.\s]*\d{2,4})"
 _DATE_RE = r"(\d{1,2}[/\-.]\d{1,2}[/\-.]\d{2,4}|\d{4}[/\-.]\d{1,2}[/\-.]\d{1,2})"
 
 
 def _to_date(raw: str) -> Optional[dt.date]:
-    # буквенный месяц: «02-JUL-26», «02 JUL 2026»
-    ma = re.match(r"(\d{1,2})[/\-.\s]*([A-Z]{3})[A-Z]*[/\-.\s]*(\d{2,4})", raw.upper())
+    # буквенный месяц: «02-JUL-26», «02 JUL 2026», «11th Aug 2026»
+    ma = re.match(r"(\d{1,2})(?:ST|ND|RD|TH)?[/\-.\s]*([A-Z]{3})[A-Z]*[/\-.\s]*(\d{2,4})", raw.upper())
     if ma and ma.group(2) in _MONTHS:
         d, mo, y = int(ma.group(1)), _MONTHS[ma.group(2)], int(ma.group(3))
         if y < 100:
