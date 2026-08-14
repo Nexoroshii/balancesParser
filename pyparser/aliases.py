@@ -91,6 +91,10 @@ FARM_ALIASES = {
     "BOSQUEFLOWERS": "BOSQUEFLOWERS SA",
     # новая ферма, колонка уже создана юзером в балансе (08.06)
     "NIVALIA FLOWERS": "NIVALIA FLOWERS",
+    # найдены по отчёту ручной проверки 08.13; колонки в балансе уже есть, алиасов не хватало
+    "TIKAN": "TIKAN CIA",                 # TIKAN CIA.LTDA. (INVOICE GLOBAL FLOWERS 15463.PDF)
+    "ROSETO": "Roseto",                   # ROSETO LTD (AR Invoice_*.pdf, Kenya)
+    "KAREN": "KAREN",                     # karenroses.com (Global_Greendeco_ltd_Invoice_*.pdf)
 }
 
 # Поставщики, которых ещё нет в балансе — их блок создаётся в конце Лист1.
@@ -121,6 +125,7 @@ SKIP_FILE_PATTERNS = [
     r"^KE\d+\.XLSX$",       # KE0702.xlsx — сводный рабочий файл
     r"GRD-GGD.*\.XLSX$",    # манифест боксов AIRFLO (.xlsx, без сумм)
     r"^GLOBAL-FFG,",        # сводник-манифест «GLOBAL-FFG, GLOBAL-IA <дата>.xlsx»
+    r"^GLOBAL-(F|FFG|IA)\s+\d{2}\.\d{2}\.XLSX$",  # тот же манифест (без запятой): «GLOBAL-F 11.08.xlsx» — BOX FOB=0, суммы нет
     r"^CARGOWISE EXPORT",   # манифест веса CargoWise (Shipper/Consignee/Weight, без сумм)
     r"^INSTRUCTIONS",       # манифест боксов по AWB («INSTRUCTIONS ... GGD ... BOXES on AWB ...»)
 ]
