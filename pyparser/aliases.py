@@ -69,9 +69,11 @@ FARM_ALIASES = {
     # BLESS FLOWER — колонки в балансе ещё нет, создаётся в конце (см. NEW_COLUMNS)
     "BLESS FLOWER": "BLESS FLOWER",
     "BESSFLOWER": "BLESS FLOWER",
-    # LANCHIMBA TUTILLO — отдельная ферма (НЕ BLESS FLOWER, юзер подтвердил разделение
-    # 2026-08-05); ранее ошибочно объединены, т.к. попали в один манual-batch с похожим
-    # форматом инвойса. Колонки в балансе ещё нет — создаётся в конце (см. NEW_COLUMNS).
+    # LANCHIMBA TUTILLO — общий ключ по умолчанию (юзер подтвердил разделение 2026-08-05,
+    # уточнено 2026-08-21: это ФИО двух разных людей, инвойсы которых пишутся в разные
+    # колонки). Полные ключи ниже (длиннее и потому приоритетнее общего) разводят их:
+    "LANCHIMBA TUTILLO MANUEL CLEMENTE": "BLESS FLOWER",
+    "LANCHIMBA TUTILLO GERMAN ALEXANDER": "LANCHIMBA TUTILLO",
     "LANCHIMBA TUTILLO": "LANCHIMBA TUTILLO",
     "FLORALCHAIN": "GREENDEAL",   # инвойсы Floralchain («Реализация товаров и услуг») пишем в колонку GREENDEAL
     "BUDS AND BLOOMS": "BUDS BLOOMS",
@@ -95,6 +97,10 @@ FARM_ALIASES = {
     "TIKAN": "TIKAN CIA",                 # TIKAN CIA.LTDA. (INVOICE GLOBAL FLOWERS 15463.PDF)
     "ROSETO": "Roseto",                   # ROSETO LTD (AR Invoice_*.pdf, Kenya)
     "KAREN": "KAREN",                     # karenroses.com (Global_Greendeco_ltd_Invoice_*.pdf)
+    # найдены по отчёту 08.28; колонки в балансе уже есть, алиасов не хватало
+    "HIGH CONNECTION FLOWERS": "HIGH CONNECTION",   # HCF CIA (Invoice#0000042097/98-GLOBAL LURB-.pdf)
+    "CREDIBLE BLOOMS": "Credible blooms",           # Credible Blooms Ltd, Kenya (Global Green Deco Invoice_116971)
+    "ZEEFLORA": "ZEEFLORA",                         # Zeeflora Limited, Kenya (GLOBAL GREEN DECOR 25.8.2026 m.pdf)
 }
 
 # Поставщики, которых ещё нет в балансе — их блок создаётся в конце Лист1.
