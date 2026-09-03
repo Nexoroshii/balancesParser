@@ -67,6 +67,10 @@ AMOUNT_PATTERNS = [
 
 # слова, указывающие что «TOTAL» — не деньги (боксы/стебли/вес)
 _NON_MONEY = re.compile(r"BOX|STEM|PIECE|BUNCH|FULL|WEIGHT|KGS?|PCS|TALLOS|BOUNCH|STEAM|RAMO|CAJA")
+# сумма прописью с копейками-дробью «...AND 40/100 USD» (QUALISA и т.п.): знаменатель
+# «100» — не деньги, но это последнее число в строке — ложно побеждает как «сумма»
+# на инвойсах с итогом <100 (реальный итог 50.40 < ложных 100). Строку пропускаем.
+_WORDS_FRACTION = re.compile(r"\d+\s*/\s*100\b")
 
 
 def parse_number(raw: str) -> Optional[float]:
@@ -172,7 +176,7 @@ def _detect(doc: Doc):
     tier2 = []
     for line in up.splitlines():
         s = line.strip()
-        if not re.match(r"TOTAL\b", s) or _NON_MONEY.search(s) or _KES.search(s):
+        if not re.match(r"TOTAL\b", s) or _NON_MONEY.search(s) or _KES.search(s) or _WORDS_FRACTION.search(s):
             continue
         md = re.search(r"([\d][\d.,]*)\s*\$", s)
         if md:
@@ -181,13 +185,16 @@ def _detect(doc: Doc):
                 tier2.append(v)
 
     # --- уровень 3: последнее число одиночной строки TOTAL (напр. Subati «Total 499.2») ---
+    # ноль допускаем (реальный бесплатный сэмпл, напр. «Total 0») — иначе строка
+    # молча отбрасывается и парсер проваливается в ещё более слабый фолбэк (макс.
+    # 2-знач. по всему документу), который подхватывает случайную цену за стебель.
     tier3 = []
     for line in up.splitlines():
         s = line.strip()
-        if not re.match(r"TOTAL\b", s) or _NON_MONEY.search(s) or _KES.search(s):
+        if not re.match(r"TOTAL\b", s) or _NON_MONEY.search(s) or _KES.search(s) or _WORDS_FRACTION.search(s):
             continue
-        nums = [n for n in _line_numbers(s) if n > 0]
-        if nums:
+        nums = _line_numbers(s)
+        if nums and nums[-1] >= 0:
             tier3.append(nums[-1])
 
     if tier1:

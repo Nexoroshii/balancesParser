@@ -101,10 +101,14 @@ FARM_ALIASES = {
     "HIGH CONNECTION FLOWERS": "HIGH CONNECTION",   # HCF CIA (Invoice#0000042097/98-GLOBAL LURB-.pdf)
     "CREDIBLE BLOOMS": "Credible blooms",           # Credible Blooms Ltd, Kenya (Global Green Deco Invoice_116971)
     "ZEEFLORA": "ZEEFLORA",                         # Zeeflora Limited, Kenya (GLOBAL GREEN DECOR 25.8.2026 m.pdf)
+    # найдено по отчёту 09.04; совсем новая ферма, колонки в балансе ещё нет.
+    # Имени фермы в тексте инвойса нет (Cayambe/San José de Ayora, Ecuador) — ключ по RUC.
+    "1793232432001": "Equinox roses",   # Commercial Invoice #001-001-000000444.pdf
 }
 
 # Поставщики, которых ещё нет в балансе — их блок создаётся в конце Лист1.
-NEW_COLUMNS = {"BLESS FLOWER", "LANCHIMBA TUTILLO", "PINANGO CUASCOTA ALEXANDRA PATRICIA", "BOSQUEFLOWERS SA"}
+NEW_COLUMNS = {"BLESS FLOWER", "LANCHIMBA TUTILLO", "PINANGO CUASCOTA ALEXANDRA PATRICIA", "BOSQUEFLOWERS SA",
+               "Equinox roses"}
 
 FREIGHT_ALIASES = {
     "INTERNATIONAL FLOWER CARGO": "IFC(разбивка колумбия)",
@@ -115,6 +119,7 @@ FREIGHT_ALIASES = {
     "AIRFLO": "AIRFLO",
     "ATLAS AIR": "PACIFIC (разбивка)",       # эквадорский борт (OneTeamCargo/Atlas) относим к PACIFIC
     "ONETEAMCARGO": "PACIFIC (разбивка)",
+    "FLORALCHAIN": "GREENDEAL",   # фрахтовые инвойсы Floralchain (KQ Freight Terminals) из t_common — та же компания, что и в FARM_ALIASES
 }
 
 # Правила по имени файла (приоритетнее поиска по тексту).
@@ -134,4 +139,7 @@ SKIP_FILE_PATTERNS = [
     r"^GLOBAL-(F|FFG|IA)\s+\d{2}\.\d{2}\.XLSX$",  # тот же манифест (без запятой): «GLOBAL-F 11.08.xlsx» — BOX FOB=0, суммы нет
     r"^CARGOWISE EXPORT",   # манифест веса CargoWise (Shipper/Consignee/Weight, без сумм)
     r"^INSTRUCTIONS",       # манифест боксов по AWB («INSTRUCTIONS ... GGD ... BOXES on AWB ...»)
+    r"^(CO|EC|KE)-FULL-\d+\.XLSX$",  # сводный манифест по плантациям на всю поставку (co/ec/ke-full-ДДММ.xlsx) —
+                                     # дублирует уже учтённые инвойсы построчно (вес фуля/цена закупки), без реального
+                                     # «TOTAL» задваивает поставщика (найдено 2026-09-03: plazoletta 46.67 + 497.60)
 ]
