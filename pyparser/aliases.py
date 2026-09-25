@@ -28,7 +28,7 @@ FARM_ALIASES = {
     "VALENTROSES": "VALENT ROSES",
     "VALENT ROSAS": "VALENT ROSES",
     "SUBATI": "Subati + Транспорт ",
-    "WARIDI": "WARIDI(euro)",
+    "WARIDI": "WARIDI",
     "FLORES MENDEZ": "FLORES  MENDEZ",
     "FLORES-MENDEZ": "FLORES  MENDEZ",
     # гровер SJ FLOWERS SAS; в имени файла стоит покупатель (GLOBAL GREENDECO LTD),
@@ -104,6 +104,8 @@ FARM_ALIASES = {
     # найдено по отчёту 09.04; совсем новая ферма, колонки в балансе ещё нет.
     # Имени фермы в тексте инвойса нет (Cayambe/San José de Ayora, Ecuador) — ключ по RUC.
     "1793232432001": "Equinox roses",   # Commercial Invoice #001-001-000000444.pdf
+    # найдено по отчёту 09.25; колонка в балансе есть, алиаса не хватало
+    "ROSAS DEL CORAZON": "ROSAS DEL CORAZON CIA. LTDA.",   # RUC 1792130034001 (F_GLOBAL-F_2251649.pdf)
 }
 
 # Поставщики, которых ещё нет в балансе — их блок создаётся в конце Лист1.
