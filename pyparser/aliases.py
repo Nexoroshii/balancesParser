@@ -28,7 +28,7 @@ FARM_ALIASES = {
     "VALENTROSES": "VALENT ROSES",
     "VALENT ROSAS": "VALENT ROSES",
     "SUBATI": "Subati + Транспорт ",
-    "WARIDI": "WARIDI(euro)",
+    "WARIDI": "WARIDI",
     "FLORES MENDEZ": "FLORES  MENDEZ",
     "FLORES-MENDEZ": "FLORES  MENDEZ",
     # гровер SJ FLOWERS SAS; в имени файла стоит покупатель (GLOBAL GREENDECO LTD),
