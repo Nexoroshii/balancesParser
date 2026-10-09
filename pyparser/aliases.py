@@ -42,8 +42,8 @@ FARM_ALIASES = {
     "CAIZALUISA": "CAIZALUISA (ANTHONELA FARMS)",
     "ANTHONELA FARMS": "CAIZALUISA (ANTHONELA FARMS)",
     "LUCY ROSES": "Lucy Roses Cia. Ltda.",
-    "ROSAL S FLOWERS": "ROSAL S FLOWERS",
-    "ROSALES GAONA": "ROSAL S FLOWERS",   # юзер подтвердил 2026-08-05: Gaona = владелец/производитель Rosal S Flowers, одна ферма
+    "ROSAL S FLOWERS": "ROSALES FLOWERS",   # колонка в балансе переименована (было «ROSAL S FLOWERS»)
+    "ROSALES GAONA": "ROSALES FLOWERS",   # юзер подтвердил 2026-08-05: Gaona = владелец/производитель Rosal S Flowers, одна ферма
     "MERAKI": "MERAKI   (EMERSON Michael Arequipa)",
     "AREQUIPA AIMACANA EMERSON": "MERAKI   (EMERSON Michael Arequipa)",
     "MERAKIFARMS": "MERAKI   (EMERSON Michael Arequipa)",
