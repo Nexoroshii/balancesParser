@@ -75,6 +75,10 @@ FARM_ALIASES = {
     "LANCHIMBA TUTILLO MANUEL CLEMENTE": "BLESS FLOWER",
     "LANCHIMBA TUTILLO GERMAN ALEXANDER": "LANCHIMBA TUTILLO",
     "LANCHIMBA TUTILLO": "LANCHIMBA TUTILLO",
+    # 10.15: в инвойсе Bless ФИО разорвано по строкам («MANUEL CLEMENTE» отдельно от
+    # «LANCHIMBA TUTILLO»), полный ключ не находится. Email (RUC 1717637084001) длиннее
+    # общего ключа и потому побеждает.
+    "BLESSFLOWER18@GMAIL.COM": "BLESS FLOWER",
     "FLORALCHAIN": "GREENDEAL",   # инвойсы Floralchain («Реализация товаров и услуг») пишем в колонку GREENDEAL
     "BUDS AND BLOOMS": "BUDS BLOOMS",
     "BUDSANDBLOOMS": "BUDS BLOOMS",     # из email/сайта, устойчиво к OCR-склейке
@@ -119,9 +123,14 @@ FREIGHT_ALIASES = {
     "PACIFIC AIR CARGO": "PACIFIC (разбивка)",
     "PACIFIC": "PACIFIC (разбивка)",
     "AIRFLO": "AIRFLO",
-    "ATLAS AIR": "PACIFIC (разбивка)",       # эквадорский борт (OneTeamCargo/Atlas) относим к PACIFIC
-    "ONETEAMCARGO": "PACIFIC (разбивка)",
+    # эквадорские AWB OneTeamCargo («CLIENTE IP ...», борт ATLAS AIR) с 10.15 пишем в
+    # отдельную колонку ONETEAM (раньше относили к PACIFIC). «ATLAS AIR» — это перевозчик,
+    # а не агент, по нему поставщика не определяем.
+    "ONETEAMCARGO": "ONETEAM",
     "FLORALCHAIN": "GREENDEAL",   # фрахтовые инвойсы Floralchain (KQ Freight Terminals) из t_common — та же компания, что и в FARM_ALIASES
+    # «FCL HAWB ... PLATINA-GGD» (10.15): AWB + цветочный инвойс Floralchain на последней
+    # странице. Берём только фрахт (Total Prepaid), цветочный инвойс ВСЕГДА пропускаем
+    # (решение юзера 2026-10-16) — метка Total Prepaid приоритетнее TOTAL инвойса.
 }
 
 # Правила по имени файла (приоритетнее поиска по тексту).
@@ -141,6 +150,8 @@ SKIP_FILE_PATTERNS = [
     r"^GLOBAL-(F|FFG|IA)\s+\d{2}\.\d{2}\.XLSX$",  # тот же манифест (без запятой): «GLOBAL-F 11.08.xlsx» — BOX FOB=0, суммы нет
     r"^CARGOWISE EXPORT",   # манифест веса CargoWise (Shipper/Consignee/Weight, без сумм)
     r"^INSTRUCTIONS",       # манифест боксов по AWB («INSTRUCTIONS ... GGD ... BOXES on AWB ...»)
+    r"^FITO\b",             # фитосанитарный сертификат («FITO ADICIONAL ... AWB ...», 10.15) — сумм нет,
+                            # иначе «30.11.2016» из текста решения / «131.50 Pieza» уходят как сумма
     r"^(CO|EC|KE)-FULL-\d+\.XLSX$",  # сводный манифест по плантациям на всю поставку (co/ec/ke-full-ДДММ.xlsx) —
                                      # дублирует уже учтённые инвойсы построчно (вес фуля/цена закупки), без реального
                                      # «TOTAL» задваивает поставщика (найдено 2026-09-03: plazoletta 46.67 + 497.60)
