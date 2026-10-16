@@ -178,6 +178,14 @@ def _detect(doc: Doc):
         s = line.strip()
         if not re.match(r"TOTAL\b", s) or _NON_MONEY.search(s) or _KES.search(s) or _WORDS_FRACTION.search(s):
             continue
+        # «$» ПЕРЕД итогом в конце строки (Bless: «TOTAL 96 2.400 $ 1032») — иначе
+        # «число перед $» хватает кол-во стеблей «2.400» (=2.40) вместо суммы
+        me = re.search(r"\$\s*(\d[\d.,]*)\s*$", s)
+        if me:
+            v = parse_number(me.group(1))
+            if v and v > 0:
+                tier2.append(v)
+                continue
         md = re.search(r"([\d][\d.,]*)\s*\$", s)
         if md:
             v = _parse_ec(md.group(1))
@@ -233,10 +241,14 @@ def detect_all_totals(doc: Doc) -> List[float]:
 # --------------------------- фрахт: Total Prepaid --------------------------
 # В форме AWB метка «Total Prepaid» стоит НАД значением, поэтому первое денежное
 # число (с 2 знаками) ПОСЛЕ метки и есть сумма фрахта. Устойчиво к OCR-опечаткам:
-# «Total Prepaid», «Totat Prepa'd», «Totat Prepaid», склейке «TotalPrepaid».
-_FREIGHT_LABEL = re.compile(r"TOT\w*\s*PREPA")
+# «Total Prepaid», «Totat Prepa'd», «Totat Prepaid», склейке «TotalPrepaid»,
+# а также «TotatPrepsid» / «Telal Prepad» (OneTeamCargo, 10.15): слово из 4-5 букв
+# на «T» + «PREP».
+_FREIGHT_LABEL = re.compile(r"\bT[A-Z]{3,4}\s*PREP")
 _MONEY2 = re.compile(r"[0-9][0-9.,]*[.,][0-9]{2}")
 _FREIGHT_DATE = re.compile(r"(\d{1,2}[-/]\d{1,2}[-/]\d{4})")
+# слабые метки обычного детектора — в AWB их перекрывает фолбэк «макс. USD»
+_WEAK_LABELS = {"USD decimal", "макс. 2-знач."}
 
 
 def detect_freight_prepaid(up: str):
@@ -496,7 +508,10 @@ def extract(doc: Doc, is_freight: bool = False) -> Extraction:
         # если метки не было (фолбэк «макс. USD») и обычный детектор уже нашёл
         # надёжную сумму по явной метке (TOTAL EUR/USD, INVOICE TOTAL...) —
         # не затираем её угадайкой: фолбэк нужен только когда сказать нечего.
-        if freight_total is not None and (freight_by_label or amt is None):
+        # Слабые метки («USD decimal» — просто первое «USD 1,234.56», в AWB это Weight
+        # Charge; «макс. 2-знач.») надёжной суммой не считаем: фолбэк их перекрывает.
+        weak = amt is None or amt.label in _WEAK_LABELS
+        if freight_total is not None and (freight_by_label or weak):
             lbl = "Total Prepaid (фрахт)" if freight_by_label else "фрахт USD (макс.)"
             amt = AmountHit(lbl, "", freight_total)
 
