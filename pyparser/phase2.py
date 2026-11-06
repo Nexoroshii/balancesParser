@@ -97,6 +97,9 @@ def aggregate(folder):
         if err is not None:
             manual.append(_manual_item(folder, p, None, "ошибка чтения: " + repr(err)))
             continue
+        if ex.status == "skip":
+            _log("  пропущен %s: %s" % (rel(p, folder), "; ".join(ex.notes)))
+            continue
         if ex.status != "ok" or not ex.supplier:
             manual.append(_manual_item(folder, p, ex, "; ".join(ex.notes) or ex.status))
             continue

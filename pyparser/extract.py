@@ -266,7 +266,7 @@ def detect_freight_prepaid(up: str):
     date = None
     dm = _FREIGHT_DATE.search(win)
     if dm:
-        date = _to_date(dm.group(1))
+        date = dm.group(1)          # строка raw: неоднозначность решает reconcile_dates
     return amount, date
 
 
@@ -278,7 +278,10 @@ _MONTHS = {
     "JAN": 1, "FEB": 2, "MAR": 3, "APR": 4, "MAY": 5, "JUN": 6,
     "JUL": 7, "AUG": 8, "SEP": 9, "OCT": 10, "NOV": 11, "DEC": 12,
 }
-_DATE_ALPHA = r"(\d{1,2}(?:ST|ND|RD|TH)?[/\-.\s]*(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*[/\-.\s]*\d{2,4})"
+# месяц — только настоящее слово-месяц (англ./исп.), иначе сорт «JULIETTA 70» = «JUL 2070»
+_MONTH_WORD = (r"(?:JAN(?:UARY)?|FEB(?:RUARY)?|MAR(?:CH)?|APR(?:IL)?|MAY|JUNE?|JULY?|AUG(?:UST)?"
+               r"|SEPT?(?:EMBER)?|OCT(?:OBER|UBRE)?|NOV(?:EMBER|IEMBRE)?|DEC(?:EMBER)?)(?![A-Z])")
+_DATE_ALPHA = r"(\d{1,2}(?:ST|ND|RD|TH)?[/\-.\s]*" + _MONTH_WORD + r"[/\-.\s]*\d{2,4})"
 _DATE_RE = r"(\d{1,2}[/\-.]\d{1,2}[/\-.]\d{2,4}|\d{4}[/\-.]\d{1,2}[/\-.]\d{1,2})"
 
 
@@ -326,6 +329,17 @@ class DateHit:
     source: str = ""
 
 
+def _is_ambiguous(raw: str) -> bool:
+    """dd/mm/yyyy, где оба числа ≤ 12 — трактовка dd/mm vs mm/dd неочевидна."""
+    parts = re.split(r"[/\-.]", raw)
+    if len(parts) == 3 and len(parts[0]) <= 2:
+        try:
+            return int(parts[0]) <= 12 and int(parts[1]) <= 12
+        except ValueError:
+            return False
+    return False
+
+
 def _serial_to_date(serial: int) -> Optional[dt.date]:
     if 40000 <= serial <= 50000:            # 2009..2036
         return dt.date(1899, 12, 30) + dt.timedelta(days=serial)
@@ -342,6 +356,14 @@ def detect_date(doc: Doc) -> Optional[DateHit]:
         if ma:
             raw = ma.group(1)
             return DateHit(raw, _to_date(raw), False, "label-alpha")
+    # Excel-серийник рядом с меткой DATE (xls, где дата в тексте как «Inv Date 46328»).
+    # Проверяем ДО безметочных фолбэков: иначе в Subati сорт «30 JULIETTA 70»
+    # принимался за «30 JUL 2070» (найдено на поставке 11.05).
+    ms = re.search(r"(?:INVOICE\s+DATE|\bDATE\b|FECHA|EMISION|F\.?\s*EMISION)\D{0,8}(\d{5})(?:\.0)?\b", up)
+    if ms:
+        d = _serial_to_date(int(ms.group(1)))
+        if d:
+            return DateHit(d.isoformat(), d, False, "serial")
     if not m:
         m = re.search(_DATE_RE, up)
         src = "any"
@@ -350,22 +372,9 @@ def detect_date(doc: Doc) -> Optional[DateHit]:
         if ma:
             raw = ma.group(1)
             return DateHit(raw, _to_date(raw), False, "alpha")
-    # Excel-серийник рядом с меткой DATE (xls, где дата в тексте как «46203.0»)
-    ms = re.search(r"(?:INVOICE\s+DATE|\bDATE\b|FECHA|EMISION|F\.?\s*EMISION)\D{0,8}(\d{5})(?:\.0)?\b", up)
-    if ms:
-        d = _serial_to_date(int(ms.group(1)))
-        if d:
-            return DateHit(d.isoformat(), d, False, "serial")
     if m:
         raw = m.group(1)
-        parts = re.split(r"[/\-.]", raw)
-        ambiguous = False
-        if len(parts) == 3 and len(parts[0]) <= 2:
-            try:
-                ambiguous = int(parts[0]) <= 12 and int(parts[1]) <= 12
-            except ValueError:
-                ambiguous = False
-        return DateHit(raw, _to_date(raw), ambiguous, src)
+        return DateHit(raw, _to_date(raw), _is_ambiguous(raw), src)
     # фолбэк — даты из ячеек .xls/.xlsx (берём самую раннюю правдоподобную)
     cds = doc.meta.get("cell_dates") or []
     if cds:
@@ -501,10 +510,12 @@ def extract(doc: Doc, is_freight: bool = False) -> Extraction:
             freight_total = freight_usd[0]
         # дата исполнения на OCR-сканах (метка-дата не читается) — последняя полная
         # дата в документе (стоит внизу бланка AWB, рядом с Total Prepaid).
+        if freight_date is not None and _to_date(freight_date) is None:
+            freight_date = None
         if freight_date is None and is_ocr:
-            ds = re.findall(r"\d{1,2}[-/]\d{1,2}[-/]\d{4}", up)
+            ds = [x for x in re.findall(r"\d{1,2}[-/]\d{1,2}[-/]\d{4}", up) if _to_date(x)]
             if ds:
-                freight_date = _to_date(ds[-1])
+                freight_date = ds[-1]
         # если метки не было (фолбэк «макс. USD») и обычный детектор уже нашёл
         # надёжную сумму по явной метке (TOTAL EUR/USD, INVOICE TOTAL...) —
         # не затираем её угадайкой: фолбэк нужен только когда сказать нечего.
@@ -517,13 +528,24 @@ def extract(doc: Doc, is_freight: bool = False) -> Extraction:
 
     date = detect_date(doc)
     if is_freight and freight_date is not None:
-        date = DateHit(freight_date.isoformat(), freight_date, False, "freight")
+        # «11/03/2026» в AWB IFC — это mm/dd (3 ноября), а у OneTeam «03-11-2026» — dd-mm:
+        # неоднозначную дату помечаем, её развернёт reconcile_dates по окну поставки
+        # (раньше флаг не ставился и IFC 11.05 ушёл в баланс 11 марта).
+        date = DateHit(freight_date, _to_date(freight_date), _is_ambiguous(freight_date), "freight")
     cur = detect_currency(doc, amt.label if amt else "")
     if cur == "?" and amt is not None:
         cur = "USD"                          # по умолчанию: подавляющее большинство в USD
 
     notes = []
     status = "ok"
+    # PACKING LIST без слова INVOICE/FACTURA — не инвойс, денег в нём нет. Roseto шлёт
+    # их рядом с инвойсом («LLC GLOBAL GREEN-<shipment>.pdf»): парсер брал GROSS WEIGHT
+    # (64.00 кг) за сумму, а сам инвойс ссылается на тот же packing list (PACKLIST NO) —
+    # получалось задвоение (найдено на поставке 11.05).
+    up_all = doc.text.upper()
+    if re.search(r"PACKING\s*LIST", up_all) and not re.search(r"INVOICE|FACTURA", up_all):
+        return Extraction(doc.path, doc.kind, canon, key, src, None, [], date, cur,
+                          "skip", ["packing list (не инвойс) — пропущен"], [])
     if doc.meta.get("ocr"):
         notes.append("распознано через OCR — сверьте сумму")
     # фрахт из OCR: если нашли явную метку «Total Prepaid» — пишем автоматически

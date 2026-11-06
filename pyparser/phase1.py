@@ -107,7 +107,7 @@ def print_table(results, folder):
         s = str(s)
         return s if len(s) <= n else s[: n - 1] + "…"
 
-    ok = manual = err = 0
+    ok = manual = err = skip = 0
     lines = []
     lines.append("%-42s | %-26s | %-10s | %10s | %-7s" %
                  ("файл", "поставщик", "дата", "сумма", "статус"))
@@ -123,14 +123,16 @@ def print_table(results, folder):
             ok += 1
         elif ex.status == "manual":
             manual += 1
+        elif ex.status == "skip":
+            skip += 1
         dd = ex.date.value.isoformat() if (ex.date and ex.date.value) else "?"
         amt = ("%.2f %s" % (ex.amount.value, ex.currency)) if ex.amount else "?"
         lines.append("%-42s | %-26s | %-10s | %10s | %-7s" %
                      (cut(name, 42), cut(ex.supplier or "—", 26), dd,
                       cut(amt, 10), ex.status))
     lines.append("-" * 108)
-    lines.append("ИТОГО: %d файлов | ok=%d | manual=%d | error=%d" %
-                 (len(results), ok, manual, err))
+    lines.append("ИТОГО: %d файлов | ok=%d | manual=%d | skip=%d | error=%d" %
+                 (len(results), ok, manual, skip, err))
     return "\n".join(lines)
 
 
