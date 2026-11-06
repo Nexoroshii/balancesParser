@@ -79,6 +79,9 @@ FARM_ALIASES = {
     # «LANCHIMBA TUTILLO»), полный ключ не находится. Email (RUC 1717637084001) длиннее
     # общего ключа и потому побеждает.
     "BLESSFLOWER18@GMAIL.COM": "BLESS FLOWER",
+    # 10.29: тот же RUC 1717637084001, но email в инвойсе нет («Lanchimba Tutillo Manuel» /
+    # «Clemente» на разных строках, 000062735-RM). Сам RUC короче общего ключа и проиграл бы.
+    "LANCHIMBA TUTILLO MANUEL": "BLESS FLOWER",
     "FLORALCHAIN": "GREENDEAL",   # инвойсы Floralchain («Реализация товаров и услуг») пишем в колонку GREENDEAL
     "BUDS AND BLOOMS": "BUDS BLOOMS",
     "BUDSANDBLOOMS": "BUDS BLOOMS",     # из email/сайта, устойчиво к OCR-склейке
@@ -110,11 +113,14 @@ FARM_ALIASES = {
     "1793232432001": "Equinox roses",   # Commercial Invoice #001-001-000000444.pdf
     # найдено по отчёту 09.25; колонка в балансе есть, алиаса не хватало
     "ROSAS DEL CORAZON": "ROSAS DEL CORAZON CIA. LTDA.",   # RUC 1792130034001 (F_GLOBAL-F_2251649.pdf)
+    # найдено по отчёту 10.29; совсем новая ферма, колонки в балансе ещё нет
+    "BLOOMS HILL FLOWERS": "BLOOMS HILL FLOWERS",   # Blooms Hill Flowers Limited, Kenya, VAT P052433806W (Global Decor inv 27.10.2026.pdf)
+    "BLOOMSHILLFLOWERS": "BLOOMS HILL FLOWERS",     # из email, устойчиво к OCR-склейке
 }
 
 # Поставщики, которых ещё нет в балансе — их блок создаётся в конце Лист1.
 NEW_COLUMNS = {"BLESS FLOWER", "LANCHIMBA TUTILLO", "PINANGO CUASCOTA ALEXANDRA PATRICIA", "BOSQUEFLOWERS SA",
-               "Equinox roses"}
+               "Equinox roses", "BLOOMS HILL FLOWERS"}
 
 FREIGHT_ALIASES = {
     "INTERNATIONAL FLOWER CARGO": "IFC(разбивка колумбия)",
