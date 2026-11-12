@@ -69,12 +69,15 @@ FARM_ALIASES = {
     # BLESS FLOWER — колонки в балансе ещё нет, создаётся в конце (см. NEW_COLUMNS)
     "BLESS FLOWER": "BLESS FLOWER",
     "BESSFLOWER": "BLESS FLOWER",
-    # LANCHIMBA TUTILLO — общий ключ по умолчанию (юзер подтвердил разделение 2026-08-05,
-    # уточнено 2026-08-21: это ФИО двух разных людей, инвойсы которых пишутся в разные
-    # колонки). Полные ключи ниже (длиннее и потому приоритетнее общего) разводят их:
+    # LANCHIMBA TUTILLO — два разных человека, разные колонки (юзер 2026-11-12):
+    #   Manuel Clemente,  RUC 1717637084001 → BLESS FLOWER (000062927-RM GLOBAL FLOWERS-GLOBAL-F.pdf)
+    #   German Alexander, RUC 1723978316001 → GEMA         (000003552-GLOBAL GREEN DECO LTD-GLOBAL-F.pdf)
+    # Общего ключа «LANCHIMBA TUTILLO» НЕТ намеренно: без ФИО/RUC/email — в ручную очередь.
+    # ФИО в инвойсах разорвано по строкам, поэтому ключи по email (длиннее → приоритетнее).
     "LANCHIMBA TUTILLO MANUEL CLEMENTE": "BLESS FLOWER",
-    "LANCHIMBA TUTILLO GERMAN ALEXANDER": "LANCHIMBA TUTILLO",
-    "LANCHIMBA TUTILLO": "LANCHIMBA TUTILLO",
+    "LANCHIMBA TUTILLO GERMAN ALEXANDER": "GEMA",
+    "ALEXLANCHIMBA@YAHOO.ES": "GEMA",
+    "1723978316001": "GEMA",
     # 10.15: в инвойсе Bless ФИО разорвано по строкам («MANUEL CLEMENTE» отдельно от
     # «LANCHIMBA TUTILLO»), полный ключ не находится. Email (RUC 1717637084001) длиннее
     # общего ключа и потому побеждает.
@@ -82,6 +85,7 @@ FARM_ALIASES = {
     # 10.29: тот же RUC 1717637084001, но email в инвойсе нет («Lanchimba Tutillo Manuel» /
     # «Clemente» на разных строках, 000062735-RM). Сам RUC короче общего ключа и проиграл бы.
     "LANCHIMBA TUTILLO MANUEL": "BLESS FLOWER",
+    "1717637084001": "BLESS FLOWER",   # RUC Bless (общего ключа больше нет — RUC не проигрывает)
     "FLORALCHAIN": "GREENDEAL",   # инвойсы Floralchain («Реализация товаров и услуг») пишем в колонку GREENDEAL
     "BUDS AND BLOOMS": "BUDS BLOOMS",
     "BUDSANDBLOOMS": "BUDS BLOOMS",     # из email/сайта, устойчиво к OCR-склейке
@@ -114,13 +118,18 @@ FARM_ALIASES = {
     # найдено по отчёту 09.25; колонка в балансе есть, алиаса не хватало
     "ROSAS DEL CORAZON": "ROSAS DEL CORAZON CIA. LTDA.",   # RUC 1792130034001 (F_GLOBAL-F_2251649.pdf)
     # найдено по отчёту 10.29; совсем новая ферма, колонки в балансе ещё нет
-    "BLOOMS HILL FLOWERS": "BLOOMS HILL FLOWERS",   # Blooms Hill Flowers Limited, Kenya, VAT P052433806W (Global Decor inv 27.10.2026.pdf)
-    "BLOOMSHILLFLOWERS": "BLOOMS HILL FLOWERS",     # из email, устойчиво к OCR-склейке
+    # 11.12: в балансе колонка заведена вручную как «BLOOMS HILL» (без FLOWERS)
+    "BLOOMS HILL FLOWERS": "BLOOMS HILL",   # Blooms Hill Flowers Limited, Kenya, VAT P052433806W (Global Decor inv 27.10.2026.pdf)
+    "BLOOMSHILLFLOWERS": "BLOOMS HILL",     # из email, устойчиво к OCR-склейке
+    # найдено по отчёту 11.12; совсем новая ферма, колонки в балансе ещё нет (юзер: создать)
+    "ALISSROSES": "ALISSROSES",       # ALISSROSES SAS, Ecuador, RUC 1793208810001 (5054569.pdf, GLOBAL-SAMPLE)
+    "ALISROSES.COM": "ALISSROSES",    # домен в email/сайте пишется с одной «S»
+    "1793208810001": "ALISSROSES",
 }
 
 # Поставщики, которых ещё нет в балансе — их блок создаётся в конце Лист1.
-NEW_COLUMNS = {"BLESS FLOWER", "LANCHIMBA TUTILLO", "PINANGO CUASCOTA ALEXANDRA PATRICIA", "BOSQUEFLOWERS SA",
-               "Equinox roses", "BLOOMS HILL FLOWERS"}
+NEW_COLUMNS = {"BLESS FLOWER", "PINANGO CUASCOTA ALEXANDRA PATRICIA", "BOSQUEFLOWERS SA",
+               "Equinox roses", "ALISSROSES"}
 
 FREIGHT_ALIASES = {
     "INTERNATIONAL FLOWER CARGO": "IFC(разбивка колумбия)",
@@ -152,7 +161,7 @@ SKIP_FILE_PATTERNS = [
     r"\d+\s*BXS",           # развесовки «... 182 BXS / 211bxs / 223 bxs»
     r"^KE\d+\.XLSX$",       # KE0702.xlsx — сводный рабочий файл
     r"GRD-GGD.*\.XLSX$",    # манифест боксов AIRFLO (.xlsx, без сумм)
-    r"^GLOBAL-FFG,",        # сводник-манифест «GLOBAL-FFG, GLOBAL-IA <дата>.xlsx»
+    r"^GLOBAL-(F|FFG|IA),", # сводник-манифест «GLOBAL-FFG, GLOBAL-IA <дата>.xlsx» / «GLOBAL-F, GLOBAL-FFG 11.11.xlsx»
     r"^GLOBAL-(F|FFG|IA)\s+\d{2}\.\d{2}\.XLSX$",  # тот же манифест (без запятой): «GLOBAL-F 11.08.xlsx» — BOX FOB=0, суммы нет
     r"^CARGOWISE EXPORT",   # манифест веса CargoWise (Shipper/Consignee/Weight, без сумм)
     r"^INSTRUCTIONS",       # манифест боксов по AWB («INSTRUCTIONS ... GGD ... BOXES on AWB ...»)

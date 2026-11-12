@@ -14,6 +14,7 @@
 from __future__ import annotations
 import re
 import shutil
+from collections import Counter
 import datetime as dt
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
@@ -43,6 +44,26 @@ def _cell_date(v):
     if isinstance(v, (int, float)) and 40000 <= v <= 50000:
         return dt.date(1899, 12, 30) + dt.timedelta(days=int(v))
     return None
+
+
+_NUM_FORMULA = re.compile(r"=?\s*\d+(?:\.\d+)?(?:\s*\+\s*\d+(?:\.\d+)?)*\s*")
+
+
+def _addends(v) -> Optional[List[float]]:
+    """Слагаемые ячейки «отгрузка»: число -> [v], «=a+b+c» -> [a,b,c]; иное -> None."""
+    if isinstance(v, bool) or v is None:
+        return None
+    if isinstance(v, (int, float)):
+        return [float(v)]
+    s = str(v).strip()
+    if not s or not _NUM_FORMULA.fullmatch(s):
+        return None
+    return [float(x) for x in re.findall(r"\d+(?:\.\d+)?", s)]
+
+
+def _key(amounts):
+    """Мультимножество сумм (в центах) — для сравнения без учёта порядка."""
+    return Counter(round(a * 100) for a in amounts)
 
 
 @dataclass
@@ -145,16 +166,32 @@ class BalanceWriter:
                 break
         return DEFAULT_DATE_FMT
 
-    def _existing_row(self, blk: Block, date: dt.date, formula: str) -> Optional[int]:
-        """Ищет уже записанную строку той же поставки (дата + формула отгрузки)."""
+    # окно сверки с уже внесённым вручную: ±4 дня от даты поставки. Поставки
+    # еженедельные, а у части ферм сумма неделя-в-неделю одинаковая (plazoletta
+    # 497.6 каждую неделю) — окно в 7 дней уже ловило бы прошлую неделю.
+    _DUP_WINDOW_DAYS = 4
+
+    def _existing_rows(self, blk: Block, date: dt.date):
+        """Строки живого массива блока, которые могут быть ЭТОЙ ЖЕ поставкой,
+        уже внесённой вручную: дата в окне ±_DUP_WINDOW_DAYS, либо дата пустая,
+        но строка стоит после последней датированной (юзер вписал отгрузку и ещё
+        не поставил дату — ONETEAM 11.12). -> [(row, addends)]."""
         ws = self.ws
-        for r in range(FIRST_DATA_ROW, ws.max_row + 1):
-            s = ws.cell(r, blk.ship_col).value
-            if s is None or str(s).strip() != formula:
+        end = self._next_empty_row(blk)
+        last_dated = max((r for r in range(FIRST_DATA_ROW, end)
+                          if _cell_date(ws.cell(r, blk.date_col).value)), default=0)
+        out = []
+        for r in range(FIRST_DATA_ROW, end):
+            adds = _addends(ws.cell(r, blk.ship_col).value)
+            if not adds:
                 continue
-            if _cell_date(ws.cell(r, blk.date_col).value) == date:
-                return r
-        return None
+            d = _cell_date(ws.cell(r, blk.date_col).value)
+            if d is None:
+                if ws.cell(r, blk.date_col).value is None and r > last_dated:
+                    out.append((r, adds, None))
+            elif abs((d - date).days) <= self._DUP_WINDOW_DAYS:
+                out.append((r, adds, d))
+        return out
 
     def write_supplier(self, canonical: str, date: dt.date,
                        amounts: List[float]) -> Tuple[str, str]:
@@ -164,11 +201,32 @@ class BalanceWriter:
         if blk is None:
             return "error", "блок поставщика не найден в балансе"
 
+        # защита от повторной записи той же поставки. Сверяем НАБОР слагаемых,
+        # а не текст формулы: вручную вносят числом («2325» вместо «=2325») и в
+        # другом порядке. Если вручную внесена ЧАСТЬ инвойсов (TESSA 11.12: 10 из
+        # 13) — дописываем только недостающие.
+        note = ""
+        mine = _key(amounts)
+        for r, adds, d in self._existing_rows(blk, date):
+            have = _key(adds)
+            if have == mine:
+                return "skipped", f"уже записано (строка {r})"
+            # частичное совпадение из ОДНОЙ суммы — только при точной дате: иначе
+            # случайное равенство (72 у TESSA) вычеркнуло бы новый инвойс. Bless 11.12:
+            # вручную 09.11 «2325», к нему по той же поставке добавился Lanchimba 2310.
+            if (len(have) >= 2 or d == date) and not (have - mine):
+                left = Counter(have)            # вычёркиваем внесённое, порядок сохраняем
+                kept = []
+                for a in amounts:
+                    c = round(a * 100)
+                    if left[c] > 0:
+                        left[c] -= 1
+                    else:
+                        kept.append(a)
+                amounts = kept
+                mine = _key(amounts)
+                note = f" [часть инвойсов уже в строке {r}, дописаны только новые]"
         formula = "=" + "+".join(_fmt_num(a) for a in amounts)
-        # защита от повторной записи той же поставки
-        dup = self._existing_row(blk, date, formula)
-        if dup is not None:
-            return "skipped", f"уже записано (строка {dup})"
 
         row = self._next_empty_row(blk)
         ws = self.ws
@@ -193,7 +251,7 @@ class BalanceWriter:
                 tot.value = f"=-{sl}{row}+{pl}{row}"
 
         col = get_column_letter(blk.date_col)
-        return "written", f"строка {row} (кол. {col}): {formula}"
+        return "written", f"строка {row} (кол. {col}): {formula}{note}"
 
     def create_block(self, name: str) -> Block:
         """Создаёт новый блок поставщика в конце листа (в стиле остальных)."""
