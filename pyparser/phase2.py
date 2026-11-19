@@ -68,12 +68,14 @@ def aggregate(folder):
     per = defaultdict(lambda: {"amounts": [], "dates": [], "files": []})
     manual = []
     seen_stems = set()          # один инвойс в двух форматах: GLOBAL.pdf == GLOBAL.xlsx
+    seen_texts = {}             # нормализованный текст -> первый файл с ним
     files = list(find_files(folder))
     total = len(files)
     _log("Найдено файлов инвойсов: %d. Читаю..." % total)
 
     # 1) читаем и извлекаем всё (даты сверяем по всей поставке до агрегации)
     parsed = []                 # (p, ex|None, err|None)
+    text_keys = {}              # p -> нормализованный текст документа (для дедупа копий)
     for i, p in enumerate(files, 1):
         _log("  [%d/%d] %s" % (i, total, rel(p, folder)))
         try:
@@ -82,6 +84,9 @@ def aggregate(folder):
         except Exception as e:
             parsed.append((p, None, e))
             continue
+        norm = " ".join((doc.text or "").split())
+        if len(norm) >= 200:    # пустые/почти пустые тексты (сканы без OCR) не сравниваем
+            text_keys[p] = norm
         parsed.append((p, ex, None))
 
     # 2) сверка дат dd/mm vs mm/dd по окну однозначных дат поставки
@@ -107,6 +112,15 @@ def aggregate(folder):
         if not amts:
             manual.append(_manual_item(folder, p, ex, "нет суммы"))
             continue
+        # один инвойс, присланный дважды под разными именами (YARINA 11.19:
+        # 000009026_143019111714.pdf == 000009026_22443211168.pdf) — текст идентичен
+        tk = text_keys.get(p)
+        if tk is not None and tk in seen_texts:
+            _log("  дубль %s: текст совпадает с %s — пропущен"
+                 % (rel(p, folder), rel(seen_texts[tk], folder)))
+            continue
+        if tk is not None:
+            seen_texts[tk] = p
         seen_stems.add(stem)
         d = ex.date.value if (ex.date and ex.date.value) else None
         rec = per[ex.supplier]
@@ -130,7 +144,8 @@ def run(folder, balance, out):
         # создать блок, если поставщика ещё нет в балансе
         if w.find_block(supplier) is None and supplier.upper() in {s.upper() for s in NEW_COLUMNS}:
             w.create_block(supplier)
-        status, msg = w.write_supplier(supplier, date, amounts)
+        amount_dates = [d for _, amts, d in rec["files"] for _ in amts]
+        status, msg = w.write_supplier(supplier, date, amounts, amount_dates)
         bucket = {"written": written, "skipped": skipped, "error": failed}[status]
         bucket.append((supplier, date, amounts, msg))
     w.save()

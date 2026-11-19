@@ -171,7 +171,7 @@ class BalanceWriter:
     # 497.6 каждую неделю) — окно в 7 дней уже ловило бы прошлую неделю.
     _DUP_WINDOW_DAYS = 4
 
-    def _existing_rows(self, blk: Block, date: dt.date):
+    def _existing_rows(self, blk: Block, dates):
         """Строки живого массива блока, которые могут быть ЭТОЙ ЖЕ поставкой,
         уже внесённой вручную: дата в окне ±_DUP_WINDOW_DAYS, либо дата пустая,
         но строка стоит после последней датированной (юзер вписал отгрузку и ещё
@@ -189,14 +189,17 @@ class BalanceWriter:
             if d is None:
                 if ws.cell(r, blk.date_col).value is None and r > last_dated:
                     out.append((r, adds, None))
-            elif abs((d - date).days) <= self._DUP_WINDOW_DAYS:
+            elif any(abs((d - x).days) <= self._DUP_WINDOW_DAYS for x in dates):
                 out.append((r, adds, d))
         return out
 
     def write_supplier(self, canonical: str, date: dt.date,
-                       amounts: List[float]) -> Tuple[str, str]:
+                       amounts: List[float],
+                       amount_dates: Optional[List[Optional[dt.date]]] = None) -> Tuple[str, str]:
         """Записывает одну строку. Возвращает (статус, сообщение).
-        статус: 'written' | 'skipped' | 'error'."""
+        статус: 'written' | 'skipped' | 'error'.
+        amount_dates — даты инвойсов параллельно amounts: если часть уже внесена,
+        дата строки-остатка = самая ранняя дата именно оставшихся инвойсов."""
         blk = self.find_block(canonical)
         if blk is None:
             return "error", "блок поставщика не найден в балансе"
@@ -207,7 +210,10 @@ class BalanceWriter:
         # 13) — дописываем только недостающие.
         note = ""
         mine = _key(amounts)
-        for r, adds, d in self._existing_rows(blk, date):
+        # окно сверки — вокруг КАЖДОЙ даты инвойсов: остаток после частичного ручного
+        # ввода датируется своими инвойсами (AIRFLO 11.19: 11.11 внесён, остаток 19.11)
+        win = {date} | {x for x in (amount_dates or []) if x}
+        for r, adds, d in self._existing_rows(blk, win):
             have = _key(adds)
             if have == mine:
                 return "skipped", f"уже записано (строка {r})"
@@ -216,16 +222,24 @@ class BalanceWriter:
             # вручную 09.11 «2325», к нему по той же поставке добавился Lanchimba 2310.
             if (len(have) >= 2 or d == date) and not (have - mine):
                 left = Counter(have)            # вычёркиваем внесённое, порядок сохраняем
-                kept = []
-                for a in amounts:
+                dates_in = amount_dates if amount_dates and len(amount_dates) == len(amounts) \
+                    else [None] * len(amounts)
+                kept, kept_dates = [], []
+                for a, ad in zip(amounts, dates_in):
                     c = round(a * 100)
                     if left[c] > 0:
                         left[c] -= 1
                     else:
                         kept.append(a)
-                amounts = kept
+                        kept_dates.append(ad)
+                amounts, amount_dates = kept, kept_dates
                 mine = _key(amounts)
-                note = f" [часть инвойсов уже в строке {r}, дописаны только новые]"
+                # AIRFLO 11.19: инвойс от 11.11 уже был в балансе, новые от 19.11 —
+                # остаток не должен наследовать дату уже внесённого инвойса
+                if any(kept_dates):
+                    date = min(x for x in kept_dates if x)
+                note = (f" [часть инвойсов уже в строке {r}, дописаны только новые, "
+                        f"дата {date:%d.%m.%Y}]")
         formula = "=" + "+".join(_fmt_num(a) for a in amounts)
 
         row = self._next_empty_row(blk)

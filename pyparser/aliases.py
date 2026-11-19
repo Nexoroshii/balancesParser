@@ -125,11 +125,14 @@ FARM_ALIASES = {
     "ALISSROSES": "ALISSROSES",       # ALISSROSES SAS, Ecuador, RUC 1793208810001 (5054569.pdf, GLOBAL-SAMPLE)
     "ALISROSES.COM": "ALISSROSES",    # домен в email/сайте пишется с одной «S»
     "1793208810001": "ALISSROSES",
+    # 11.19: новая ферма, колонки в балансе нет — создаётся в конце (NEW_COLUMNS)
+    "COLORFULROSES": "COLORFULROSES",        # COLORFULROSES SAS, Ecuador, Vía Tocachi (Invoice_GLOBALGREENDECO_000007020.pdf, GLOBAL SAMPLE)
+    "COLORFULROSESEC.COM": "COLORFULROSES",  # домен в email
 }
 
 # Поставщики, которых ещё нет в балансе — их блок создаётся в конце Лист1.
 NEW_COLUMNS = {"BLESS FLOWER", "PINANGO CUASCOTA ALEXANDRA PATRICIA", "BOSQUEFLOWERS SA",
-               "Equinox roses", "ALISSROSES"}
+               "Equinox roses", "ALISSROSES", "COLORFULROSES"}
 
 FREIGHT_ALIASES = {
     "INTERNATIONAL FLOWER CARGO": "IFC(разбивка колумбия)",
@@ -164,6 +167,8 @@ SKIP_FILE_PATTERNS = [
     r"^GLOBAL-(F|FFG|IA),", # сводник-манифест «GLOBAL-FFG, GLOBAL-IA <дата>.xlsx» / «GLOBAL-F, GLOBAL-FFG 11.11.xlsx»
     r"^GLOBAL-(F|FFG|IA)\s+\d{2}\.\d{2}\.XLSX$",  # тот же манифест (без запятой): «GLOBAL-F 11.08.xlsx» — BOX FOB=0, суммы нет
     r"^CARGOWISE EXPORT",   # манифест веса CargoWise (Shipper/Consignee/Weight, без сумм)
+    r"^DIMENSIONMARCACION", # «DimensionMarcacionPallet-OTC-<AWB>.xlsx» (11.19) — REPORTE DIMENSIONES OneTeam:
+                            # габариты/вес по фермам, сумм нет (вес уходил в «сумму»)
     r"^INSTRUCTIONS",       # манифест боксов по AWB («INSTRUCTIONS ... GGD ... BOXES on AWB ...»)
     r"^FITO\b",             # фитосанитарный сертификат («FITO ADICIONAL ... AWB ...», 10.15) — сумм нет,
                             # иначе «30.11.2016» из текста решения / «131.50 Pieza» уходят как сумма
